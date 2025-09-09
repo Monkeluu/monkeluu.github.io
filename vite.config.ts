@@ -20,6 +20,11 @@ errorOnDuplicatesPkgDeps(devDependencies, dependencies);
  * Note that Vite normally starts from `index.html` but the qwikCity plugin makes start at `src/entry.ssr.tsx` instead.
  */
 export default defineConfig(({ command, mode }): UserConfig => {
+	// Vite automatically loads .env, .env.development, .env.production, etc.
+	const host = process.env.VITE_SERVER_HOST || "0.0.0.0";
+	const port = parseInt(process.env.VITE_SERVER_PORT || "5173", 10);
+	const usePolling = process.env.VITE_USE_POLLING === "true";
+	const pollingInterval = parseInt(process.env.VITE_POLLING_INTERVAL || "100", 10);
 	return {
 		plugins: [qwikCity(), qwikVite(), tsconfigPaths({ root: "." })],
 		// This tells Vite which dependencies to pre-build in dev mode.
@@ -51,6 +56,14 @@ export default defineConfig(({ command, mode }): UserConfig => {
 				// Don't cache the server response in dev mode
 				"Cache-Control": "public, max-age=0",
 			},
+
+			// **Key** for better reliability with file-watching in Docker/WSL2
+			watch: {
+				usePolling,
+				interval: pollingInterval,
+			},
+
+			strictPort: true,
 		},
 		preview: {
 			headers: {
